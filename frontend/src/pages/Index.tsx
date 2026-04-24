@@ -13,8 +13,15 @@ import TimeTrackingView from '../components/custom/TimeTrackingView';
 import InsightsView from '../components/custom/InsightsView';
 import ProjectsView from '../components/custom/ProjectsView';
 import TaskModal from '../components/custom/TaskModal';
+import UserProfileModal from '../components/custom/UserProfileModal';
 import { apiTimeEntries, apiTasks } from '../lib/api';
 import type { Task, TimeEntry } from '@shared/types/api';
+
+interface UserProfile {
+  name: string;
+  role: string;
+  email?: string;
+}
 
 type View = 'dashboard' | 'tasks' | 'kanban' | 'calendar' | 'time' | 'insights' | 'projects';
 
@@ -40,6 +47,11 @@ export default function Index() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem('userProfile');
+    return saved ? JSON.parse(saved) : { name: '张明', role: '产品经理' };
+  });
+  const [showUserProfileModal, setShowUserProfileModal] = useState(false);
 
   const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
 
@@ -241,14 +253,17 @@ export default function Index() {
 
         {/* User */}
         <div className="px-4 py-4" style={{ borderTop: '1px solid #1E293B' }}>
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors hover:bg-[#1E293B]">
+          <div
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors hover:bg-[#1E293B]"
+            onClick={() => setShowUserProfileModal(true)}
+          >
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
               style={{ background: 'linear-gradient(135deg, #0EA5E9, #6366F1)', color: 'white' }}>
-              张
+              {userProfile.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate" style={{ color: '#F1F5F9' }}>张明</p>
-              <p className="text-xs truncate" style={{ color: '#64748B' }}>产品经理</p>
+              <p className="text-sm font-medium truncate" style={{ color: '#F1F5F9' }}>{userProfile.name}</p>
+              <p className="text-xs truncate" style={{ color: '#64748B' }}>{userProfile.role}</p>
             </div>
             <div className="w-2 h-2 rounded-full" style={{ background: '#10B981' }} />
           </div>
@@ -488,6 +503,17 @@ export default function Index() {
           task={editingTask}
           onClose={() => { setShowTaskModal(false); setEditingTask(null); }}
           onSaved={handleTaskSaved}
+        />
+      )}
+
+      {showUserProfileModal && (
+        <UserProfileModal
+          user={userProfile}
+          onClose={() => setShowUserProfileModal(false)}
+          onSave={(updatedUser) => {
+            setUserProfile(updatedUser);
+            setShowUserProfileModal(false);
+          }}
         />
       )}
     </div>
